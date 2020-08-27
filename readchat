@@ -93,6 +93,6 @@ def bulkmessage(data):
         #print("resp: ", chatbot.get_response(getMessage(message)))
 
 print("should connect...")
-sio.connect('https://chat.bitwave.tv')
+sio.connect('https://chat.bitwave.tv',transports='websocket')
 print("wainting for events...")
 sio.wait()
