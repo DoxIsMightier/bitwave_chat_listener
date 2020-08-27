@@ -7,3 +7,12 @@ A read only chat client so you can listen to chat and provides basic processing 
 or `pip install python-socketio colorama`
 
 if you are still living in python2.0 land for some reason
+
+## Usage
+
+To use chat reader
+`./readchat`
+
+or if it's not marked as executable
+
+`python3 readchat`
