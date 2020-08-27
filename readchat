@@ -1,0 +1,98 @@
+#!/usr/bin/python3
+
+# reads chat without a browser
+
+# shows colors on messages
+
+# can also use espeak to read the messages to you and say who said them
+
+# pip3 install python-socketio colorama
+# https://python-socketio.readthedocs.io/en/latest/client.html#installation
+
+# blue with white background (((them)))
+# rainbow ==text==
+
+
+import socketio
+import colorama
+import json
+import re
+import html
+
+def clean_emotes(message):
+    imagetags = re.findall(r'\s<img\/?[^>]*>', message)
+    for img in imagetags:
+        #print('image tag matched:',img)
+        matches = re.findall(r'\salt="([^"]+)"', img)
+        for match in matches:
+            print('Found matches:', match)
+            #re.sub("<\/?[^>]*>", ':'+match+':',message);
+            # should check if the match has colons in it or not already
+            if ':' in match:
+                message = message.replace(img, ' '+match+'', 1)
+            else:
+                message = message.replace(img, ' :'+match+':', 1)
+        #print('message:', message)
+    return message
+
+
+def unescape(s):
+    return html.unescape(s)
+    
+def getMessage(message):
+    msg = ''
+
+    try:
+        msg = message["message"]
+        msg = clean_emotes(msg)
+        msg = re.sub("<\/?[^>]*>", '',msg);
+        #msg = re.sub("((https?:\/\/)|(www\.))[^\s]+", '',msg);
+    except:
+        msg = ''
+    return msg
+
+def getFrom(message):
+    msg = ''
+
+    try:
+        msg = message["username"]
+        msg = clean_emotes(msg)
+        msg = re.sub("<\/?[^>]*>", '',msg);
+        msg = re.sub("((https?:\/\/)|(www\.))[^\s]+", '',msg);
+    except:
+        msg = ''
+    return msg
+    
+sio = socketio.Client()
+
+
+def myread(message,uname):
+    if len(message) > 0 and message[0] == '>':
+        print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.GREEN + message)
+    elif len(message) > 0 and message[0] == '<':
+        print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.RED + message)
+    else:
+        #print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.BLUE + message)
+        print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.WHITE + message)
+
+@sio.event
+def connect():
+    print('connection established')
+    # user profile:nulling recaptcha:null, page 'global', token: null
+
+@sio.event
+def bulkmessage(data):
+    #print('message received with ', data)
+    #logmessages(data)
+    #sio.emit('my response', {'response': 'my response'})
+    # should look at if the message was at the bot then parse the message to get the command
+    for message in data:
+        # Get a response to an input statement
+        #print("msg: ", getMessage(message))
+        myread(unescape(getMessage(message)),getFrom(message))
+        #print("resp: ", chatbot.get_response(getMessage(message)))
+
+print("should connect...")
+sio.connect('https://chat.bitwave.tv')
+print("wainting for events...")
+sio.wait()
