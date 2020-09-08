@@ -23,6 +23,9 @@ import re
 import html
 import pyttsx3
 
+listen_channel = 'markpugner'
+readAllAlerts = True
+
 def check_ignore_users(user):
     # opens the users file and checks if they are ignored
     try:
@@ -165,6 +168,24 @@ def bulkmessage(data):
             #print("msg: ", getMessage(message))
             myread(unescape(getMessage(message)),getFrom(message))
             #print("resp: ", chatbot.get_response(getMessage(message)))
+            
+@sio.on('alert')
+def process_channel_alerts(data):
+    global listen_channel
+    global readAllAlerts
+    if data['channel'].lower() == listen_channel or readAllAlerts:
+        if data['color'] == 'red':
+            say("Pay Pig Red",data['message'])
+            print(colorama.Back.RED + "Red Alert:",data['message'] + colorama.Back.BLACK)
+        if data['color'] == 'blue':
+            say("Pay Pig Blue",data['message'])
+            print(colorama.Back.BLUE + "Blue Alert:",data['message']+ colorama.Back.BLACK)
+        if data['color'] == 'grey':
+            say("Pay Pig Grey",data['message'])
+            print(colorama.Back.LIGHTBLACK_EX + "Grey Alert:",data['message']+ colorama.Back.BLACK)
+        if data['color'] == 'yellow':
+            say("Pay Pig Yellow",data['message'])
+            print(colorama.Back.YELLOW + "Yellow Alert:",data['message']+ colorama.Back.BLACK)
 
 print("should connect...")
 sio.connect('https://chat.bitwave.tv',transports='websocket')
