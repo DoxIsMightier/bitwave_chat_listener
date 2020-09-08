@@ -12,6 +12,9 @@
 # blue with white background (((them)))
 # rainbow ==text==
 
+# add ignore channel option
+# add tts support
+
 
 import socketio
 import colorama
@@ -20,7 +23,11 @@ import re
 import html
 
 def clean_emotes(message):
-    imagetags = re.findall(r'\s<img\/?[^>]*>', message)
+    # data-emote-tooltip="SIR" title="SIR" alt="SIR"
+    # just search for the alt that we want...
+    # so the regex works if there is text before and after the emote
+    imagetags = re.findall(r'<img\/?[^>]*>', message)
+    #print(imagetags)
     for img in imagetags:
         #print('image tag matched:',img)
         matches = re.findall(r'\salt="([^"]+)"', img)
