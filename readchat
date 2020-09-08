@@ -21,6 +21,37 @@ import colorama
 import json
 import re
 import html
+import pyttsx3
+
+def check_ignore_users(user):
+    # opens the users file and checks if they are ignored
+    try:
+        with open('users') as f:
+            for uname in f:
+                if uname.strip('\n').lower() == user.lower():
+                    return True
+        return False
+    except:
+        return False
+
+def check_ignore_channel(channel):
+     # opens the channels file and checks if they are ignored
+     try:
+        with open('channels') as f:
+            for uname in f:
+                if uname.strip('\n').lower() == channel.lower():
+                    return True
+        return False
+     except:
+        return False
+        
+def check_tts_on():
+    try:
+        with open('tts') as f:
+            return True
+        return False
+    except:
+        return False
 
 def clean_emotes(message):
     # data-emote-tooltip="SIR" title="SIR" alt="SIR"
@@ -45,6 +76,18 @@ def clean_emotes(message):
 
 def unescape(s):
     return html.unescape(s)
+
+def getChannel(message):
+    msg = ''
+
+    try:
+        msg = message["channel"]
+        msg = clean_emotes(msg)
+        msg = re.sub("<\/?[^>]*>", '',msg);
+        #msg = re.sub("((https?:\/\/)|(www\.))[^\s]+", '',msg);
+    except:
+        msg = ''
+    return msg
     
 def getMessage(message):
     msg = ''
@@ -73,14 +116,37 @@ def getFrom(message):
 sio = socketio.Client()
 
 
+
+tts = pyttsx3.init()
+
+messages = []
+saying = False
+
+def say(user,message):
+    try:
+        if False:
+            messages.append(message)
+        else:
+            if check_tts_on():
+                #saying = True
+                tts.say(user + " says " + message)
+                tts.runAndWait()
+                #saying = False
+    except:
+        pass
+        saying = False
+
+
 def myread(message,uname):
-    if len(message) > 0 and message[0] == '>':
-        print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.GREEN + message)
-    elif len(message) > 0 and message[0] == '<':
-        print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.RED + message)
-    else:
-        #print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.BLUE + message)
-        print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.WHITE + message)
+    if not check_ignore_users(uname):
+        if len(message) > 0 and message[0] == '>':
+            print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.GREEN + message)
+        elif len(message) > 0 and message[0] == '<':
+            print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.RED + message)
+        else:
+            #print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.BLUE + message)
+            print(colorama.Fore.RED + uname + " says:\n" + colorama.Fore.WHITE + message)
+        say(uname,message)
 
 @sio.event
 def connect():
@@ -95,9 +161,10 @@ def bulkmessage(data):
     # should look at if the message was at the bot then parse the message to get the command
     for message in data:
         # Get a response to an input statement
-        #print("msg: ", getMessage(message))
-        myread(unescape(getMessage(message)),getFrom(message))
-        #print("resp: ", chatbot.get_response(getMessage(message)))
+        if not check_ignore_channel(getChannel(message)):
+            #print("msg: ", getMessage(message))
+            myread(unescape(getMessage(message)),getFrom(message))
+            #print("resp: ", chatbot.get_response(getMessage(message)))
 
 print("should connect...")
 sio.connect('https://chat.bitwave.tv',transports='websocket')
